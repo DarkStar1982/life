@@ -1,5 +1,7 @@
+extern crate rand;
 
 use std::collections::hash_map::{HashMap};
+use rand::prelude::*;
 
 #[derive(PartialEq,Eq,Hash,Clone,Copy)]
 pub struct Loc {
@@ -29,8 +31,6 @@ impl Loc {
   }
 }
 
-
-
 pub struct World {
   buffer_1: HashMap<Loc,bool>,
   buffer_2: HashMap<Loc,bool>,
@@ -48,7 +48,7 @@ impl World {
   }
 
   /**
-   * Initialize from a configuration string. Assumes string is a grid of 
+   * Initialize from a configuration string. Assumes string is a grid of
    * periods and asterisks (rows separated by line breaks), where asterisks
    * are "alive" cells and periods are dead cells.
    */
@@ -79,18 +79,18 @@ impl World {
   }
 
   pub fn current_buffer(&self) -> &HashMap<Loc,bool> {
-    if self.using_buffer_1 { 
-      &self.buffer_1 
-    } else { 
-      &self.buffer_2 
+    if self.using_buffer_1 {
+      &self.buffer_1
+    } else {
+      &self.buffer_2
     }
   }
 
   fn next_buffer(&mut self) -> &mut HashMap<Loc,bool> {
     if self.using_buffer_1 {
       &mut self.buffer_2
-    } else { 
-      &mut self.buffer_1 
+    } else {
+      &mut self.buffer_1
     }
   }
 
@@ -115,7 +115,7 @@ impl World {
     };
 
     if alive {
-      // If this location is now alive, we need to add any of its neighbors not 
+      // If this location is now alive, we need to add any of its neighbors not
       // already in the HashMap, to it.
       for neighbor in loc.neighbors().iter() {
         if next_buffer.get(neighbor).is_none() {
@@ -139,14 +139,38 @@ impl World {
         .filter(|alive| *alive)
         .count();
 
-      // If this cell is dead and doesn't have any alive neighbors, we don't 
-      // need to check on the next cycle for whether or not it might become 
+      // If this cell is dead and doesn't have any alive neighbors, we don't
+      // need to check on the next cycle for whether or not it might become
       // alive, so we can omit it altogether from the next HashMap.
       if alive_neighbors > 0 {
         self.set(&loc, new_status(alive, alive_neighbors));
       }
     }
 
+    let mut row = 0;
+    let mut col = 0;
+    //add "energy cells"
+    self.set(&Loc { row, col }, energy());
+    col = col+1;
+    self.set(&Loc { row, col}, energy());
+    col = col+1;
+    self.set(&Loc { row, col }, energy());
+
+
+    row = row+1;
+    self.set(&Loc { row, col }, energy());
+    col = col-1;
+    self.set(&Loc { row, col }, energy());
+    col = col-1;
+    self.set(&Loc { row, col }, energy());
+
+    row = row+1;
+    self.set(&Loc { row, col }, energy());
+    col = col+1;
+    self.set(&Loc { row, col }, energy());
+    col = col+1;
+    self.set(&Loc { row, col }, energy());
+    
     // Toggle buffers
     self.using_buffer_1 = !self.using_buffer_1;
 
@@ -155,6 +179,40 @@ impl World {
   }
 }
 
+
+/* RULES SECTION - CAN BE RECONFIGURABLE*/
+static SURVIVES: [bool; 9] = [false, false, true, true, false, false, false, false, false];
+static NEWBORNS: [bool; 9] = [false, false, false, true, false, false, false, false, false];
+
+/* ENERGY FUNCTION */
+fn energy()->bool
+{
+    let mut rng = rand::thread_rng();
+    let y = rng.gen_range(0.0, 100.0);
+    if y<50.0
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+/* ENTROPY FACTOR */
+fn entropy()->bool
+{
+    let mut rng = rand::thread_rng();
+    let y = rng.gen_range(0.0, 1000.0);
+    if y<1.0
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
 /**
  * Whether or not the supplied location is alive, based on the supplied buffer.
  */
@@ -165,15 +223,21 @@ fn is_alive(buffer: &HashMap<Loc,bool>, loc: &Loc) -> bool {
 
 /**
  * Given the status of one cell and the number of its neighbors that are alive,
- * determine whether it's alive in the next step. This is the core rule of 
+ * determine whether it's alive in the next step. This is the core rule of
  * Conway's Game of Life.
  */
+
+
 fn new_status(alive: bool, alive_neighbors: usize) -> bool {
-  if alive && (alive_neighbors == 2 || alive_neighbors == 3) {
-    true
-  } else if !alive && alive_neighbors == 3 {
-    true
-  } else {
-    false
-  }
+    if alive && SURVIVES[alive_neighbors]
+    {
+        return entropy()
+    }
+    else if !alive && NEWBORNS[alive_neighbors] {
+        true
+    }
+    else
+    {
+        false
+    }
 }

@@ -41,13 +41,13 @@ fn main() {
                 // println!("Step took: {}ms", step_start.elapsed().map(|d| d.as_micros()).unwrap_or(0) as f32 / 1000.0);
                 previous_update = SystemTime::now();
             }
-            
+
             window.draw_2d(&e, |context, graphics, _| {
                 clear(BLACK, graphics);
 
                 // Translate by 1/2 the window size, to center 0,0 in the middle of the window
                 let context = context.trans(GFX_CONTEXT_OFFSET, GFX_CONTEXT_OFFSET);
-                
+
                 for loc in world.current_buffer().keys() {
                     if world.get(loc) {
                         rectangle(WHITE, [loc.col as f64 * SQUARE_SIZE, loc.row as f64 * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE], context.transform, graphics);
