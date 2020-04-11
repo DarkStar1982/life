@@ -156,7 +156,6 @@ impl World {
     col = col+1;
     self.set(&Loc { row, col }, energy());
 
-
     row = row+1;
     self.set(&Loc { row, col }, energy());
     col = col-1;
@@ -170,7 +169,7 @@ impl World {
     self.set(&Loc { row, col }, energy());
     col = col+1;
     self.set(&Loc { row, col }, energy());
-    
+
     // Toggle buffers
     self.using_buffer_1 = !self.using_buffer_1;
 
