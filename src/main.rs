@@ -1,5 +1,4 @@
 use std::time::{SystemTime,UNIX_EPOCH};
-use std::path::Path;
 
 extern crate piston_window;
 use piston_window::*;
@@ -16,7 +15,7 @@ const GFX_CONTEXT_OFFSET: f64 = (WINDOW_SIZE / 2) as f64;
 const MILLIS_PER_FRAME: u128 = 10;
 
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
+    //let args: Vec<String> = std::env::args().collect();
     let opengl = OpenGL::V3_2;
     let mut window: PistonWindow = WindowSettings::new("Life", [WINDOW_SIZE; 2])
         .exit_on_esc(true)
@@ -26,7 +25,6 @@ fn main() {
 
         //let configuration_path = String::from("./src/configurations/") + &args[1] + ".txt";
         //let mut world = World::from_configuration(&std::fs::read_to_string(Path::new(&configuration_path)).unwrap(), '.', '*').unwrap();
-        let mut world = World::from_blank_state().unwrap();
         let mut previous_update = UNIX_EPOCH;
 
         let mut cell_size:f64 = SQUARE_SIZE;
@@ -35,6 +33,12 @@ fn main() {
         let mut gen_counter:i64 = 0;
         let mut speed: u128 = MILLIS_PER_FRAME;
         let mut paused:bool = false;
+        let mut color_invert:bool = false;
+        let mut foreground: [f32;4] = WHITE;
+        let mut background: [f32;4] = BLACK;
+
+        let mut world = World::from_blank_state().unwrap();
+
         while let Some(e) = window.next() {
             if previous_update.elapsed().map(|d| d.as_millis()).unwrap_or(0) > speed {
                 // NOTE: Uncomment for timing info
@@ -68,6 +72,19 @@ fn main() {
                              }
                              Key::X => {
                                  cell_size = cell_size*2.0;
+                             }
+                             Key::C => {
+                                 if color_invert
+                                 {
+                                     color_invert = false;
+                                     foreground = WHITE;
+                                     background = BLACK;
+                                 }
+                                 else {
+                                     color_invert = true;
+                                     foreground = BLACK;
+                                     background = WHITE;
+                                 }
                              }
                              Key::F => {
                                  if speed>2
@@ -114,14 +131,14 @@ fn main() {
             };
 
             window.draw_2d(&e, |context, graphics, _| {
-                clear(BLACK, graphics);
+                clear(background, graphics);
 
                 // Translate by 1/2 the window size, to center 0,0 in the middle of the window
                 let context = context.trans(GFX_CONTEXT_OFFSET+cursor_x, GFX_CONTEXT_OFFSET+cursor_y);
 
                 for loc in world.current_buffer().keys() {
                     if world.get(loc) {
-                        rectangle(WHITE, [loc.col as f64 * cell_size, loc.row as f64 * cell_size, cell_size, cell_size], context.transform, graphics);
+                        rectangle(foreground, [loc.col as f64 * cell_size, loc.row as f64 * cell_size, cell_size, cell_size], context.transform, graphics);
                     } else {
                         // NOTE: Uncomment to render cells that are dead but have entries in the hash map
                         // rectangle(RED, [loc.col as f64 * SQUARE_SIZE, loc.row as f64 * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE], context.transform, graphics);

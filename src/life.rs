@@ -185,9 +185,9 @@ impl World {
 }
 
 
-/* RULES SECTION - CAN BE RECONFIGURABLE*/
-static SURVIVES: [bool; 9] = [false, false, true, true, false, false, false, false, false];
+/* RULES SECTION - SHOULD BE RECONFIGURABLE*/
 static NEWBORNS: [bool; 9] = [false, false, false, true, false, false, false, false, false];
+static SURVIVES: [bool; 9] = [false, false, true, true, false, false, false, false, false];
 
 /* ENERGY FUNCTION */
 fn energy()->bool
