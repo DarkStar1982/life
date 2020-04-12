@@ -1,7 +1,7 @@
 [package]
-name = "life"
+name = "entropylife"
 version = "0.1.0"
-authors = ["brundolf"]
+authors = ["dsilin","brundolf"]
 edition = "2018"
 
 [dependencies]

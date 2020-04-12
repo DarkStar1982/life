@@ -17,20 +17,16 @@ const MILLIS_PER_FRAME: u128 = 10;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+    let opengl = OpenGL::V3_2;
+    let mut window: PistonWindow = WindowSettings::new("Life", [WINDOW_SIZE; 2])
+        .exit_on_esc(true)
+        .graphics_api(opengl)
+        .build()
+        .unwrap();
 
-    if args.len() < 2 {
-        println!("Usage: life CONFIGURATION")
-    } else {
-        let opengl = OpenGL::V3_2;
-        let mut window: PistonWindow = WindowSettings::new("Life", [WINDOW_SIZE; 2])
-            .exit_on_esc(true)
-            .graphics_api(opengl)
-            .build()
-            .unwrap();
-
-        let configuration_path = String::from("./src/configurations/") + &args[1] + ".txt";
-        let mut world = World::from_configuration(&std::fs::read_to_string(Path::new(&configuration_path)).unwrap(), '.', '*').unwrap();
-
+        //let configuration_path = String::from("./src/configurations/") + &args[1] + ".txt";
+        //let mut world = World::from_configuration(&std::fs::read_to_string(Path::new(&configuration_path)).unwrap(), '.', '*').unwrap();
+        let mut world = World::from_blank_state().unwrap();
         let mut previous_update = UNIX_EPOCH;
 
         let mut cell_size:f64 = SQUARE_SIZE;
@@ -133,5 +129,4 @@ fn main() {
                 }
             });
         }
-    }
 }

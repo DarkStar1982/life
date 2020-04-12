@@ -52,6 +52,13 @@ impl World {
    * periods and asterisks (rows separated by line breaks), where asterisks
    * are "alive" cells and periods are dead cells.
    */
+  pub fn from_blank_state()->Result<Self,String>
+  {
+      let mut world = Self::new();
+      return Ok(world);
+  }
+
+/*
   pub fn from_configuration(data: &str, dead_char: char, alive_char: char) -> Result<Self,String> {
     let mut world = Self::new();
 
@@ -69,7 +76,6 @@ impl World {
         row += 1;
         col = 0;
       } else if c == '\r' {
-        // do nothing
       } else {
         return Err(format!("Invalid char '{}' at {}, {}", c, row, col));
       }
@@ -77,7 +83,7 @@ impl World {
 
     return Ok(world);
   }
-
+*/
   pub fn current_buffer(&self) -> &HashMap<Loc,bool> {
     if self.using_buffer_1 {
       &self.buffer_1
