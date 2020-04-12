@@ -2,7 +2,7 @@
 
 ![Sample image](https://github.com/brundonsmith/life/raw/master/sample.png)
 
-This is an flavor of the [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life)
+This is a flavor of the [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life)
 based on Brandon Smith's Rust implementation of an unmodified Game of Life.
 
 The major difference are two additional parameters:
