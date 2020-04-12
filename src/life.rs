@@ -202,7 +202,7 @@ fn energy()->bool
 fn entropy()->bool
 {
     let mut rng = rand::thread_rng();
-    let y = rng.gen_range(0.0, 1000.0);
+    let y = rng.gen_range(0.0, 10000.0);
     if y<1.0
     {
         return false;

@@ -33,24 +33,99 @@ fn main() {
 
         let mut previous_update = UNIX_EPOCH;
 
+        let mut cell_size:f64 = SQUARE_SIZE;
+        let mut cursor_x:f64 = 0.0;
+        let mut cursor_y:f64 = 0.0;
+        let mut gen_counter:i64 = 0;
+        let mut speed: u128 = MILLIS_PER_FRAME;
+        let mut paused:bool = false;
         while let Some(e) = window.next() {
-            if previous_update.elapsed().map(|d| d.as_millis()).unwrap_or(0) > MILLIS_PER_FRAME {
+            if previous_update.elapsed().map(|d| d.as_millis()).unwrap_or(0) > speed {
                 // NOTE: Uncomment for timing info
                 // let step_start = SystemTime::now();
-                world.step();
+                if !paused
+                {
+                    world.step();
+                    gen_counter = gen_counter + 1;
+                }
                 // println!("Step took: {}ms", step_start.elapsed().map(|d| d.as_micros()).unwrap_or(0) as f32 / 1000.0);
                 previous_update = SystemTime::now();
             }
+            if let Some(button) = e.release_args() {
+                match button {
+                    Button::Keyboard(key) => {
+                         match key {
+                             Key::Down=>{
+                                 cursor_y = cursor_y - 10.0;
+                             }
+                             Key::Up=>{
+                                 cursor_y = cursor_y + 10.0;
+                             }
+                             Key::Left=>{
+                                 cursor_x = cursor_x + 10.0;
+                             }
+                             Key::Right=>{
+                                 cursor_x = cursor_x - 10.0;
+                             }
+                             Key::Z => {
+                                 cell_size = cell_size/2.0;
+                             }
+                             Key::X => {
+                                 cell_size = cell_size*2.0;
+                             }
+                             Key::F => {
+                                 if speed>2
+                                 {
+                                    speed = speed/2;
+                                 }
+                                 else
+                                 {
+                                     speed = 0;
+                                 }
+                             }
+                             Key::S => {
+                                 if speed == 0
+                                 {
+                                     speed = 1;
+                                 }
+                                 else
+                                 {
+                                     speed = speed*2;
+                                 }
+                             }
+                             Key::I => {
+                                 println!("Generation: {:}", gen_counter);
+                                 println!("Speed is {:} ms per frame", speed);
+                             }
+                             Key::P => {
+                                 paused = true;
+                                 println!("Game paused");
+                             }
+                             Key::R => {
+                                 paused = false;
+                                 println!("Resumed");
+                             }
+                             _=>{
+                                 //ignore other input
+                                 //println!("Released keyboard key '{:?}'", key);
+                             }
+                         }
+                     }
+                     _=>{
+                         //ignore other input
+                     }
+                }
+            };
 
             window.draw_2d(&e, |context, graphics, _| {
                 clear(BLACK, graphics);
 
                 // Translate by 1/2 the window size, to center 0,0 in the middle of the window
-                let context = context.trans(GFX_CONTEXT_OFFSET, GFX_CONTEXT_OFFSET);
+                let context = context.trans(GFX_CONTEXT_OFFSET+cursor_x, GFX_CONTEXT_OFFSET+cursor_y);
 
                 for loc in world.current_buffer().keys() {
                     if world.get(loc) {
-                        rectangle(WHITE, [loc.col as f64 * SQUARE_SIZE, loc.row as f64 * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE], context.transform, graphics);
+                        rectangle(WHITE, [loc.col as f64 * cell_size, loc.row as f64 * cell_size, cell_size, cell_size], context.transform, graphics);
                     } else {
                         // NOTE: Uncomment to render cells that are dead but have entries in the hash map
                         // rectangle(RED, [loc.col as f64 * SQUARE_SIZE, loc.row as f64 * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE], context.transform, graphics);
