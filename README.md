@@ -27,3 +27,4 @@ Following commands are supported:
 * Pause/Resume: P/R
 * Run slower/faster: S/F
 * Dump info (generation count and speed): I
+* Invert colors: C

@@ -1,7 +1,14 @@
 extern crate rand;
+use rand::FromEntropy;
+use rand::rngs::SmallRng;
+use rand::Rng;
 
 use std::collections::hash_map::{HashMap};
-use rand::prelude::*;
+
+
+/* RULES SECTION - SHOULD BE RECONFIGURABLE*/
+static NEWBORNS: [bool; 9] = [false, false, false, true, false, false, false, false, false];
+static SURVIVES: [bool; 9] = [false, false, true, true, false, false, false, false, false];
 
 #[derive(PartialEq,Eq,Hash,Clone,Copy)]
 pub struct Loc {
@@ -11,14 +18,14 @@ pub struct Loc {
 
 impl Loc {
   pub fn new(row: i64, col: i64) -> Self {
-    Self {
+    return Self {
       row,
       col,
     }
   }
 
   pub fn neighbors(&self) -> [Loc;8] {
-    [
+    return [
       Loc::new(self.row + 1, self.col + 1),
       Loc::new(self.row + 1, self.col - 1),
       Loc::new(self.row - 1, self.col + 1),
@@ -86,25 +93,54 @@ impl World {
 */
   pub fn current_buffer(&self) -> &HashMap<Loc,bool> {
     if self.using_buffer_1 {
-      &self.buffer_1
+      return &self.buffer_1
     } else {
-      &self.buffer_2
+      return &self.buffer_2
     }
   }
 
   fn next_buffer(&mut self) -> &mut HashMap<Loc,bool> {
     if self.using_buffer_1 {
-      &mut self.buffer_2
+      return &mut self.buffer_2
     } else {
-      &mut self.buffer_1
+      return &mut self.buffer_1
     }
+  }
+
+  /* ENTROPY FACTOR */
+  fn entropy(&self)->bool
+  {
+      let mut small_rng = SmallRng::from_entropy();
+      let y = small_rng.gen_range(0.0, 10000.0);
+      if y<1.0
+      {
+          return false;
+      }
+      else
+      {
+          return true;
+      }
+  }
+
+ fn new_status(&self, alive: bool, alive_neighbors: usize) -> bool {
+      if alive && SURVIVES[alive_neighbors]
+      {
+          return self.entropy()
+      }
+      else if !alive && NEWBORNS[alive_neighbors] {
+          return true
+      }
+      else
+      {
+          return false
+      }
   }
 
   /**
    * Get aliveness status of a location in the world.
    */
   pub fn get(&self, loc: &Loc) -> bool {
-    is_alive(self.current_buffer(), loc)
+    return is_alive(self.current_buffer(), loc)
   }
 
   /**
@@ -149,7 +185,7 @@ impl World {
       // need to check on the next cycle for whether or not it might become
       // alive, so we can omit it altogether from the next HashMap.
       if alive_neighbors > 0 {
-        self.set(&loc, new_status(alive, alive_neighbors));
+        self.set(&loc, self.new_status(alive, alive_neighbors));
       }
     }
 
@@ -185,15 +221,12 @@ impl World {
 }
 
 
-/* RULES SECTION - SHOULD BE RECONFIGURABLE*/
-static NEWBORNS: [bool; 9] = [false, false, false, true, false, false, false, false, false];
-static SURVIVES: [bool; 9] = [false, false, true, true, false, false, false, false, false];
-
 /* ENERGY FUNCTION */
 fn energy()->bool
 {
-    let mut rng = rand::thread_rng();
-    let y = rng.gen_range(0.0, 100.0);
+    //let mut rng = rand::thread_rng();
+    let mut small_rng = SmallRng::from_entropy();
+    let y = small_rng.gen_range(0.0, 100.0);
     if y<50.0
     {
         return false;
@@ -204,45 +237,9 @@ fn energy()->bool
     }
 }
 
-/* ENTROPY FACTOR */
-fn entropy()->bool
-{
-    let mut rng = rand::thread_rng();
-    let y = rng.gen_range(0.0, 10000.0);
-    if y<1.0
-    {
-        return false;
-    }
-    else
-    {
-        return true;
-    }
-}
 /**
  * Whether or not the supplied location is alive, based on the supplied buffer.
  */
 fn is_alive(buffer: &HashMap<Loc,bool>, loc: &Loc) -> bool {
   *buffer.get(loc).unwrap_or(&false)
-}
-
-
-/**
- * Given the status of one cell and the number of its neighbors that are alive,
- * determine whether it's alive in the next step. This is the core rule of
- * Conway's Game of Life.
- */
-
-
-fn new_status(alive: bool, alive_neighbors: usize) -> bool {
-    if alive && SURVIVES[alive_neighbors]
-    {
-        return entropy()
-    }
-    else if !alive && NEWBORNS[alive_neighbors] {
-        true
-    }
-    else
-    {
-        false
-    }
 }
