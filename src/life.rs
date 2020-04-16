@@ -7,8 +7,8 @@ use std::collections::hash_map::{HashMap};
 
 
 /* RULES SECTION - SHOULD BE RECONFIGURABLE*/
-static NEWBORNS: [bool; 9] = [false, false, false, true, false, false, false, false, false];
-static SURVIVES: [bool; 9] = [false, false, true, true, false, false, false, false, false];
+static NEWBORNS: [bool; 9] = [false, false, false, true, false, false, true, false, false];
+static SURVIVES: [bool; 9] = [false, false, true,  true, false, false, false, false, false];
 
 #[derive(PartialEq,Eq,Hash,Clone,Copy)]
 pub struct Loc {
@@ -65,7 +65,6 @@ impl World {
       return Ok(world);
   }
 
-/*
   pub fn from_configuration(data: &str, dead_char: char, alive_char: char) -> Result<Self,String> {
     let mut world = Self::new();
 
@@ -90,7 +89,7 @@ impl World {
 
     return Ok(world);
   }
-*/
+
   pub fn current_buffer(&self) -> &HashMap<Loc,bool> {
     if self.using_buffer_1 {
       return &self.buffer_1
@@ -191,7 +190,7 @@ impl World {
 
     let mut row = 0;
     let mut col = 0;
-    //add "energy cells"
+    //add "energy cells" - make conditional on config
     self.set(&Loc { row, col }, energy());
     col = col+1;
     self.set(&Loc { row, col}, energy());

@@ -6,7 +6,7 @@ This is a flavor of the [Conway's Game of Life](https://en.wikipedia.org/wiki/Co
 based on Brandon Smith's Rust implementation of an unmodified Game of Life.
 
 The major difference are two additional parameters:
-* Entropy (each alive cell has a half/life where it becomes dead, regardless of its neighbors' state
+* Entropy (each alive cell has a halflife where it becomes dead, regardless of its neighbors' state
 * Energy (some dead cells may become alive at each generation, regardless of their neighbors' state )
 
 It uses [Piston](https://www.piston.rs/) to create a window and draw the world

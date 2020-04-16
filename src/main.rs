@@ -1,6 +1,7 @@
-use std::time::{SystemTime,UNIX_EPOCH};
-
 extern crate piston_window;
+use std::time::{SystemTime,UNIX_EPOCH};
+use std::path::Path;
+
 use piston_window::*;
 
 mod life;
@@ -15,7 +16,7 @@ const GFX_CONTEXT_OFFSET: f64 = (WINDOW_SIZE / 2) as f64;
 const MILLIS_PER_FRAME: u128 = 10;
 
 fn main() {
-    //let args: Vec<String> = std::env::args().collect();
+    let args: Vec<String> = std::env::args().collect();
     let opengl = OpenGL::V3_2;
     let mut window: PistonWindow = WindowSettings::new("Life", [WINDOW_SIZE; 2])
         .exit_on_esc(true)
@@ -23,26 +24,45 @@ fn main() {
         .build()
         .unwrap();
 
-        //let configuration_path = String::from("./src/configurations/") + &args[1] + ".txt";
-        //let mut world = World::from_configuration(&std::fs::read_to_string(Path::new(&configuration_path)).unwrap(), '.', '*').unwrap();
-        let mut previous_update = UNIX_EPOCH;
+    //initialize variables
+    let mut previous_update = UNIX_EPOCH;
+    let mut speed: u128 = MILLIS_PER_FRAME;
+    let mut cell_size:f64 = SQUARE_SIZE;
+    let mut foreground: [f32;4] = WHITE;
+    let mut background: [f32;4] = BLACK;
+    let mut cursor_x:f64 = 0.0;
+    let mut cursor_y:f64 = 0.0;
+    let mut gen_counter:i64 = 0;
+    let mut paused:bool = false;
+    let mut color_invert:bool = false;
+    let mut world:life::World;
 
-        let mut cell_size:f64 = SQUARE_SIZE;
-        let mut cursor_x:f64 = 0.0;
-        let mut cursor_y:f64 = 0.0;
-        let mut gen_counter:i64 = 0;
-        let mut speed: u128 = MILLIS_PER_FRAME;
-        let mut paused:bool = false;
-        let mut color_invert:bool = false;
-        let mut foreground: [f32;4] = WHITE;
-        let mut background: [f32;4] = BLACK;
+    match args.len()
+    {
+        1=>{
+            world = World::from_blank_state().unwrap();
+        },
+        3=>{
+            let cmd = &args[1];
+            let arg = &args[2];
+            if cmd=="-n"
+            {
+                let configuration_path = String::from(arg);
+                world = World::from_configuration(&std::fs::read_to_string(Path::new(&configuration_path)).unwrap(), '.', '*').unwrap();
+            }
+            else
+            {
+                world = World::from_blank_state().unwrap();
+            }
+        }
+        _=>{
+            world = World::from_blank_state().unwrap();
+        }
+    }
 
-        let mut world = World::from_blank_state().unwrap();
+    while let Some(e) = window.next() {
+        if previous_update.elapsed().map(|d| d.as_millis()).unwrap_or(0) > speed {
 
-        while let Some(e) = window.next() {
-            if previous_update.elapsed().map(|d| d.as_millis()).unwrap_or(0) > speed {
-                // NOTE: Uncomment for timing info
-                // let step_start = SystemTime::now();
                 if !paused
                 {
                     world.step();
@@ -56,16 +76,16 @@ fn main() {
                     Button::Keyboard(key) => {
                          match key {
                              Key::Down=>{
-                                 cursor_y = cursor_y - 10.0;
+                                 cursor_y = cursor_y - 20.0;
                              }
                              Key::Up=>{
-                                 cursor_y = cursor_y + 10.0;
+                                 cursor_y = cursor_y + 20.0;
                              }
                              Key::Left=>{
-                                 cursor_x = cursor_x + 10.0;
+                                 cursor_x = cursor_x + 20.0;
                              }
                              Key::Right=>{
-                                 cursor_x = cursor_x - 10.0;
+                                 cursor_x = cursor_x - 20.0;
                              }
                              Key::Z => {
                                  cell_size = cell_size/2.0;
