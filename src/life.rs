@@ -1,13 +1,8 @@
-extern crate rand;
-use rand::FromEntropy;
-use rand::rngs::SmallRng;
-use rand::Rng;
-
 use std::collections::hash_map::{HashMap};
 
 
-/* RULES SECTION - SHOULD BE RECONFIGURABLE*/
-static NEWBORNS: [bool; 9] = [false, false, false, true, false, false, true, false, false];
+/* RULES SECTION - SHOULD BE MADE RECONFIGURABLE*/
+static NEWBORNS: [bool; 9] = [false, false, false, true, false, false, false, false, false];
 static SURVIVES: [bool; 9] = [false, false, true,  true, false, false, false, false, false];
 
 #[derive(PartialEq,Eq,Hash,Clone,Copy)]
@@ -106,25 +101,10 @@ impl World {
     }
   }
 
-  /* ENTROPY FACTOR */
-  fn entropy(&self)->bool
-  {
-      let mut small_rng = SmallRng::from_entropy();
-      let y = small_rng.gen_range(0.0, 10000.0);
-      if y<1.0
-      {
-          return false;
-      }
-      else
-      {
-          return true;
-      }
-  }
-
  fn new_status(&self, alive: bool, alive_neighbors: usize) -> bool {
       if alive && SURVIVES[alive_neighbors]
       {
-          return self.entropy()
+          return true
       }
       else if !alive && NEWBORNS[alive_neighbors] {
           return true
@@ -188,52 +168,12 @@ impl World {
       }
     }
 
-    let mut row = 0;
-    let mut col = 0;
-    //add "energy cells" - make conditional on config
-    self.set(&Loc { row, col }, energy());
-    col = col+1;
-    self.set(&Loc { row, col}, energy());
-    col = col+1;
-    self.set(&Loc { row, col }, energy());
-
-    row = row+1;
-    self.set(&Loc { row, col }, energy());
-    col = col-1;
-    self.set(&Loc { row, col }, energy());
-    col = col-1;
-    self.set(&Loc { row, col }, energy());
-
-    row = row+1;
-    self.set(&Loc { row, col }, energy());
-    col = col+1;
-    self.set(&Loc { row, col }, energy());
-    col = col+1;
-    self.set(&Loc { row, col }, energy());
-
     // Toggle buffers
     self.using_buffer_1 = !self.using_buffer_1;
 
     // Clear the old buffer
     self.next_buffer().clear();
   }
-}
-
-
-/* ENERGY FUNCTION */
-fn energy()->bool
-{
-    //let mut rng = rand::thread_rng();
-    let mut small_rng = SmallRng::from_entropy();
-    let y = small_rng.gen_range(0.0, 100.0);
-    if y<50.0
-    {
-        return false;
-    }
-    else
-    {
-        return true;
-    }
 }
 
 /**

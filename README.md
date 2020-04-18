@@ -5,9 +5,6 @@
 This is a flavor of the [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life)
 based on Brandon Smith's Rust implementation of an unmodified Game of Life.
 
-The major difference are two additional parameters:
-* Entropy (each alive cell has a halflife where it becomes dead, regardless of its neighbors' state
-* Energy (some dead cells may become alive at each generation, regardless of their neighbors' state )
 
 It uses [Piston](https://www.piston.rs/) to create a window and draw the world
 state to it.
@@ -16,8 +13,14 @@ state to it.
 
 Assuming you have `cargo` installed, just execute `cargo run`
 
+To load any of example patters do as following
 ```
-cargo run
+cargo run -- -n src/configurations/glider.txt
+```
+
+To run without `cargo`, using just build output
+```
+...target/debug/entropylife -n ../../src/configurations/glider.txt
 ```
 
 ## Controls

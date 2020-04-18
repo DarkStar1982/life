@@ -6,7 +6,6 @@ edition = "2018"
 
 [dependencies]
 piston_window = "0.107.0"
-rand = "0.6.5"
 crossbeam = "0.7.3"
 
 [profile.dev]
