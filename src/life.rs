@@ -1,6 +1,5 @@
 use std::collections::hash_map::{HashMap};
 
-
 /* RULES SECTION - SHOULD BE MADE RECONFIGURABLE*/
 static NEWBORNS: [bool; 9] = [false, false, false, true, false, false, false, false, false];
 static SURVIVES: [bool; 9] = [false, false, true,  true, false, false, false, false, false];

@@ -13,7 +13,7 @@ state to it.
 
 Assuming you have `cargo` installed, just execute `cargo run`
 
-To load any of example patters do as following
+To load any of example patterns do as following
 ```
 cargo run -- -n src/configurations/glider.txt
 ```
