@@ -22,7 +22,7 @@ To run without `cargo`, using just build output
 ...target/debug/entropylife -n ../../src/configurations/glider.txt
 ```
 
-When run without input arguments i
+When run without input arguments it runs Langton's Ant algorithm
 
 ## Controls
 Following commands are supported:
