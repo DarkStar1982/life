@@ -1,5 +1,5 @@
 [package]
-name = "entropylife"
+name = "cell_automata"
 version = "0.1.0"
 authors = ["dsilin","brundolf"]
 edition = "2018"

@@ -5,7 +5,10 @@ use std::path::Path;
 use piston_window::*;
 
 mod life;
+mod ant;
+
 use life::{World};
+use ant::{World as AntWorld};
 
 const BLACK: [f32;4] = [0.0, 0.0, 0.0, 1.0];
 const WHITE: [f32;4] = [1.0; 4];
@@ -36,6 +39,10 @@ fn main() {
     let mut paused:bool = false;
     let mut color_invert:bool = false;
     let mut world:life::World;
+    let mut antworld:ant::World;
+    let mut is_blank:bool = true;
+
+    antworld = AntWorld::from_blank_state().unwrap();
 
     match args.len()
     {
@@ -49,6 +56,7 @@ fn main() {
             {
                 let configuration_path = String::from(arg);
                 world = World::from_configuration(&std::fs::read_to_string(Path::new(&configuration_path)).unwrap(), '.', '*').unwrap();
+                is_blank = false;
             }
             else
             {
@@ -61,11 +69,18 @@ fn main() {
     }
 
     while let Some(e) = window.next() {
-        if previous_update.elapsed().map(|d| d.as_millis()).unwrap_or(0) > speed {
+        if (speed == 0) | (previous_update.elapsed().map(|d| d.as_millis()).unwrap_or(0) > speed) {
 
                 if !paused
                 {
-                    world.step();
+                    if is_blank
+                    {
+                        antworld.step();
+                    }
+                    else
+                    {
+                        world.step();
+                    }
                     gen_counter = gen_counter + 1;
                 }
                 // println!("Step took: {}ms", step_start.elapsed().map(|d| d.as_micros()).unwrap_or(0) as f32 / 1000.0);
@@ -155,13 +170,25 @@ fn main() {
 
                 // Translate by 1/2 the window size, to center 0,0 in the middle of the window
                 let context = context.trans(GFX_CONTEXT_OFFSET+cursor_x, GFX_CONTEXT_OFFSET+cursor_y);
+                if is_blank
+                {
+                    for loc in antworld.current_buffer().keys() {
+                        if antworld.get(loc) {
+                            rectangle(foreground, [loc.col as f64 * cell_size, loc.row as f64 * cell_size, cell_size, cell_size], context.transform, graphics);
+                        } else {
 
-                for loc in world.current_buffer().keys() {
-                    if world.get(loc) {
-                        rectangle(foreground, [loc.col as f64 * cell_size, loc.row as f64 * cell_size, cell_size, cell_size], context.transform, graphics);
-                    } else {
-                        // NOTE: Uncomment to render cells that are dead but have entries in the hash map
-                        // rectangle(RED, [loc.col as f64 * SQUARE_SIZE, loc.row as f64 * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE], context.transform, graphics);
+                        }
+                    }
+
+                }
+                else
+                {
+                    for loc in world.current_buffer().keys() {
+                        if world.get(loc) {
+                            rectangle(foreground, [loc.col as f64 * cell_size, loc.row as f64 * cell_size, cell_size, cell_size], context.transform, graphics);
+                        } else {
+
+                        }
                     }
                 }
             });

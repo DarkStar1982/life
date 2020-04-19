@@ -2,8 +2,7 @@
 
 ![Sample image](https://github.com/brundonsmith/life/raw/master/sample.png)
 
-This is a flavor of the [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life)
-based on Brandon Smith's Rust implementation of an unmodified Game of Life.
+This is an engine for various cellular automata, such as [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) based on Brandon Smith's original Game of Life implementation in Rust.
 
 
 It uses [Piston](https://www.piston.rs/) to create a window and draw the world
@@ -13,7 +12,7 @@ state to it.
 
 Assuming you have `cargo` installed, just execute `cargo run`
 
-To load any of example patterns do as following
+To load any of Life example patterns do as following
 ```
 cargo run -- -n src/configurations/glider.txt
 ```
@@ -22,6 +21,8 @@ To run without `cargo`, using just build output
 ```
 ...target/debug/entropylife -n ../../src/configurations/glider.txt
 ```
+
+When run without input arguments i
 
 ## Controls
 Following commands are supported:
