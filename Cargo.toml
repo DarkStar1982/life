@@ -9,4 +9,7 @@ piston_window = "0.107.0"
 crossbeam = "0.7.3"
 
 [profile.dev]
+opt-level = 0
+
+[profile.release]
 opt-level = 3

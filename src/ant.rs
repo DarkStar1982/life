@@ -1,10 +1,6 @@
 /* Langton's ant algorthim implementation */
 use std::collections::hash_map::{HashMap};
 
-/* RULES SECTION - SHOULD BE MADE RECONFIGURABLE*/
-static NEWBORNS: [bool; 9] = [false, false, false, true, false, false, false, false, false];
-static SURVIVES: [bool; 9] = [false, false, true,  true, false, false, false, false, false];
-
 #[derive(PartialEq,Eq,Hash,Clone,Copy)]
 pub struct Loc {
   pub row: i64,
@@ -43,17 +39,13 @@ impl World {
    */
   pub fn from_blank_state()->Result<Self,String>
   {
-      let mut world = Self::new();
+      let world = Self::new();
       return Ok(world);
   }
 
   pub fn current_buffer(&self) -> &HashMap<Loc,bool>
   {
       return &self.buffer_1
-  }
-
-  fn next_buffer(&mut self) -> &mut HashMap<Loc,bool> {
-      return &mut self.buffer_1
   }
 
   /**

@@ -55,7 +55,7 @@ impl World {
    */
   pub fn from_blank_state()->Result<Self,String>
   {
-      let mut world = Self::new();
+      let world = Self::new();
       return Ok(world);
   }
 
