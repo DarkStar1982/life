@@ -4,11 +4,9 @@ use std::path::Path;
 
 use piston_window::*;
 
-mod life;
-mod ant;
+mod automata;
 
-use life::{World};
-use ant::{World as AntWorld};
+use automata::{LifeWorld, AntWorld};
 
 const BLACK: [f32;4] = [0.0, 0.0, 0.0, 1.0];
 const WHITE: [f32;4] = [1.0; 4];
@@ -38,8 +36,8 @@ fn main() {
     let mut gen_counter:i64 = 0;
     let mut paused:bool = false;
     let mut color_invert:bool = false;
-    let mut world:life::World;
-    let mut antworld:ant::World;
+    let mut world:automata::LifeWorld;
+    let mut antworld:automata::AntWorld;
     let mut is_blank:bool = true;
 
     antworld = AntWorld::from_blank_state().unwrap();
@@ -47,7 +45,7 @@ fn main() {
     match args.len()
     {
         1=>{
-            world = World::from_blank_state().unwrap();
+            world = LifeWorld::from_blank_state().unwrap();
         },
         3=>{
             let cmd = &args[1];
@@ -55,16 +53,16 @@ fn main() {
             if cmd=="-n"
             {
                 let configuration_path = String::from(arg);
-                world = World::from_configuration(&std::fs::read_to_string(Path::new(&configuration_path)).unwrap(), '.', '*').unwrap();
+                world = LifeWorld::from_configuration(&std::fs::read_to_string(Path::new(&configuration_path)).unwrap(), '.', '*').unwrap();
                 is_blank = false;
             }
             else
             {
-                world = World::from_blank_state().unwrap();
+                world = LifeWorld::from_blank_state().unwrap();
             }
         }
         _=>{
-            world = World::from_blank_state().unwrap();
+            world = LifeWorld::from_blank_state().unwrap();
         }
     }
 
