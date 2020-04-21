@@ -6,7 +6,7 @@ use piston_window::*;
 
 mod automata;
 
-use automata::{LifeWorld, AntWorld};
+use automata::{IWorld, LifeWorld, AntWorld};
 
 const BLACK: [f32;4] = [0.0, 0.0, 0.0, 1.0];
 const WHITE: [f32;4] = [1.0; 4];
@@ -36,8 +36,8 @@ fn main() {
     let mut gen_counter:i64 = 0;
     let mut paused:bool = false;
     let mut color_invert:bool = false;
-    let mut world:automata::LifeWorld;
-    let mut antworld:automata::AntWorld;
+    let mut world:automata::LifeWorld; 
+    let mut antworld:automata::AntWorld;// = automata::World::new();
     let mut is_blank:bool = true;
 
     antworld = AntWorld::from_blank_state().unwrap();

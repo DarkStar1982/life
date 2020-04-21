@@ -27,8 +27,15 @@ pub struct AntWorld {
   angle: i32,
 }
 
-trait World {
+//common trait to both types of automata
+pub trait IWorld {
+    fn new() -> Self;
+    //fn from_blank_state() ->Result<Self,String>;
     fn get(&self, loc: &Loc) -> bool;
+    fn set(&mut self, loc: &Loc, alive: bool);
+    fn current_buffer(&self) -> &HashMap<Loc,bool>;
+    fn step(&mut self);
+
 }
 
 /* IMPLEMENTATION SECTION */
@@ -55,15 +62,145 @@ impl Loc {
   }
 }
 
+impl IWorld for LifeWorld {
+    fn new() -> LifeWorld {
+      Self {
+        buffer_1: HashMap::new(),
+        buffer_2: HashMap::new(),
+        using_buffer_1: true,
+      }
+    }
+
+    fn get(&self, loc: &Loc) -> bool {
+      return is_alive(self.current_buffer(), loc)
+    }
+
+    /**
+     * Set aliveness status of a location in the world.
+     */
+    fn set(&mut self, loc: &Loc, alive: bool) {
+      let next_buffer = self.next_buffer();
+
+      // If this location is already in the HashMap, set its value. Otherwise,
+      // add it as a new entry to the HashMap.
+      match next_buffer.get_mut(loc) {
+        Some(val) => *val = alive,
+        None => { next_buffer.insert(*loc, alive); }
+      };
+
+      if alive {
+        // If this location is now alive, we need to add any of its neighbors not
+        // already in the HashMap, to it.
+        for neighbor in loc.neighbors().iter() {
+          if next_buffer.get(neighbor).is_none() {
+            next_buffer.insert(*neighbor, false);
+          }
+        }
+      }
+    }
+
+    fn current_buffer(&self) -> &HashMap<Loc,bool>
+    {
+      if self.using_buffer_1 {
+        return &self.buffer_1
+      } else {
+        return &self.buffer_2
+      }
+    }
+
+    /**
+     * One "tick" of the world.
+     */
+    fn step(&mut self)
+    {
+      let keys: Vec<Loc> = self.current_buffer().keys().map(|&loc| loc).collect();
+
+      for loc in keys.iter() {
+        let alive: bool = self.get(&loc);
+        let neighbors: [Loc;8] = loc.neighbors();
+        let alive_neighbors: usize = neighbors.iter()
+          .map(|neighbor| is_alive(self.current_buffer(), neighbor))
+          .filter(|alive| *alive)
+          .count();
+
+        // If this cell is dead and doesn't have any alive neighbors, we don't
+        // need to check on the next cycle for whether or not it might become
+        // alive, so we can omit it altogether from the next HashMap.
+        if alive_neighbors > 0 {
+          self.set(&loc, self.new_status(alive, alive_neighbors));
+        }
+      }
+
+      // Toggle buffers
+      self.using_buffer_1 = !self.using_buffer_1;
+
+      // Clear the old buffer
+      self.next_buffer().clear();
+    }
+}
+
+/* AntWorld Trait */
+impl IWorld for AntWorld {
+    fn new() -> AntWorld {
+      Self {
+        buffer_1: HashMap::new(),
+        machine: Loc::new(0,0),
+        angle: 90,
+      }
+    }
+
+    fn get(&self, loc: &Loc) -> bool {
+      return is_alive(&self.buffer_1, loc)
+    }
+
+    /**
+     * Set aliveness status of a location in the world.
+     */
+    fn set(&mut self, loc: &Loc, alive: bool) {
+      let next_buffer = &mut self.buffer_1;
+
+      // If this location is already in the HashMap, set its value. Otherwise,
+      // add it as a new entry to the HashMap.
+      match next_buffer.get_mut(loc) {
+        Some(val) => *val = alive,
+        None => { next_buffer.insert(*loc, alive); }
+      };
+    }
+
+    fn current_buffer(&self) -> &HashMap<Loc,bool>
+    {
+        return &self.buffer_1
+    }
+
+    /**
+     * One "tick" of the world.
+     */
+    fn step(&mut self)
+    {
+      let is_alive: bool = self.get(&self.machine);
+      let loc = self.machine;
+      if is_alive {
+          self.angle = (self.angle - 90) % 360;
+          if self.angle<0
+          {
+              self.angle = self.angle + 360;
+          }
+          self.set(&loc, false)
+      }
+      else {
+          self.angle = (self.angle + 90) % 360;
+          self.set(&loc, true);
+      }
+      let offset = moves(self.angle);
+      self.machine = Loc::new(loc.row+offset.0, loc.col + offset.1);
+    }
+}
 
 impl LifeWorld {
-
-  pub fn new() -> LifeWorld {
-    Self {
-      buffer_1: HashMap::new(),
-      buffer_2: HashMap::new(),
-      using_buffer_1: true,
-    }
+  pub fn from_blank_state()->Result<Self, String>
+  {
+    let world = Self::new();
+    return Ok(world);
   }
 
   /**
@@ -71,12 +208,6 @@ impl LifeWorld {
    * periods and asterisks (rows separated by line breaks), where asterisks
    * are "alive" cells and periods are dead cells.
    */
-  pub fn from_blank_state()->Result<Self,String>
-  {
-      let world = Self::new();
-      return Ok(world);
-  }
-
   pub fn from_configuration(data: &str, dead_char: char, alive_char: char) -> Result<Self,String> {
     let mut world = Self::new();
 
@@ -102,14 +233,6 @@ impl LifeWorld {
     return Ok(world);
   }
 
-  pub fn current_buffer(&self) -> &HashMap<Loc,bool> {
-    if self.using_buffer_1 {
-      return &self.buffer_1
-    } else {
-      return &self.buffer_2
-    }
-  }
-
   fn next_buffer(&mut self) -> &mut HashMap<Loc,bool> {
     if self.using_buffer_1 {
       return &mut self.buffer_2
@@ -132,137 +255,14 @@ impl LifeWorld {
       }
   }
 
-  /**
-   * Get aliveness status of a location in the world.
-   */
-  pub fn get(&self, loc: &Loc) -> bool {
-    return is_alive(self.current_buffer(), loc)
-  }
-
-  /**
-   * Set aliveness status of a location in the world.
-   */
-  pub fn set(&mut self, loc: &Loc, alive: bool) {
-    let next_buffer = self.next_buffer();
-
-    // If this location is already in the HashMap, set its value. Otherwise,
-    // add it as a new entry to the HashMap.
-    match next_buffer.get_mut(loc) {
-      Some(val) => *val = alive,
-      None => { next_buffer.insert(*loc, alive); }
-    };
-
-    if alive {
-      // If this location is now alive, we need to add any of its neighbors not
-      // already in the HashMap, to it.
-      for neighbor in loc.neighbors().iter() {
-        if next_buffer.get(neighbor).is_none() {
-          next_buffer.insert(*neighbor, false);
-        }
-      }
-    }
-  }
-
-  /**
-   * One "tick" of the world.
-   */
-  pub fn step(&mut self) {
-    let keys: Vec<Loc> = self.current_buffer().keys().map(|&loc| loc).collect();
-
-    for loc in keys.iter() {
-      let alive: bool = self.get(&loc);
-      let neighbors: [Loc;8] = loc.neighbors();
-      let alive_neighbors: usize = neighbors.iter()
-        .map(|neighbor| is_alive(self.current_buffer(), neighbor))
-        .filter(|alive| *alive)
-        .count();
-
-      // If this cell is dead and doesn't have any alive neighbors, we don't
-      // need to check on the next cycle for whether or not it might become
-      // alive, so we can omit it altogether from the next HashMap.
-      if alive_neighbors > 0 {
-        self.set(&loc, self.new_status(alive, alive_neighbors));
-      }
-    }
-
-    // Toggle buffers
-    self.using_buffer_1 = !self.using_buffer_1;
-
-    // Clear the old buffer
-    self.next_buffer().clear();
-  }
 }
 
-
-
 impl AntWorld {
-
-  pub fn new() -> AntWorld {
-    Self {
-      buffer_1: HashMap::new(),
-      machine: Loc::new(0,0),
-      angle: 90,
+    pub fn from_blank_state()->Result<Self, String>
+    {
+     let world = Self::new();
+     return Ok(world);
     }
-  }
-
-  /**
-   * Initialize from a configuration string. Assumes string is a grid of
-   * periods and asterisks (rows separated by line breaks), where asterisks
-   * are "alive" cells and periods are dead cells.
-   */
-  pub fn from_blank_state()->Result<Self,String>
-  {
-      let world = Self::new();
-      return Ok(world);
-  }
-
-  pub fn current_buffer(&self) -> &HashMap<Loc,bool>
-  {
-      return &self.buffer_1
-  }
-
-  /**
-   * Get aliveness status of a location in the world.
-   */
-  pub fn get(&self, loc: &Loc) -> bool {
-    return is_alive(&self.buffer_1, loc)
-  }
-
-  /**
-   * Set aliveness status of a location in the world.
-   */
-  pub fn set(&mut self, loc: &Loc, alive: bool) {
-    let next_buffer = &mut self.buffer_1;
-
-    // If this location is already in the HashMap, set its value. Otherwise,
-    // add it as a new entry to the HashMap.
-    match next_buffer.get_mut(loc) {
-      Some(val) => *val = alive,
-      None => { next_buffer.insert(*loc, alive); }
-    };
-  }
-
-  /**
-   * One "tick" of the world.
-   */
-  pub fn step(&mut self) {
-    let is_alive: bool = self.get(&self.machine);
-    let loc = self.machine;
-    if is_alive {
-        self.angle = (self.angle - 90) % 360;
-        if self.angle<0
-        {
-            self.angle = self.angle + 360;
-        }
-        self.set(&loc, false)
-    }
-    else {
-        self.angle = (self.angle + 90) % 360;
-        self.set(&loc, true);
-    }
-    let offset = moves(self.angle);
-    self.machine = Loc::new(loc.row+offset.0, loc.col + offset.1);
-  }
 }
 
 /**
