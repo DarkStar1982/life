@@ -4,6 +4,8 @@ use std::collections::hash_map::{HashMap};
 static NEWBORNS: [bool; 9] = [false, false, false, true, false, false, false, false, false];
 static SURVIVES: [bool; 9] = [false, false, true,  true, false, false, false, false, false];
 
+/* DECLARATIONS SECTION */
+
 //location data structure
 #[derive(PartialEq,Eq,Hash,Clone,Copy)]
 pub struct Loc {
@@ -24,6 +26,12 @@ pub struct AntWorld {
   machine: Loc,
   angle: i32,
 }
+
+trait World {
+    fn get(&self, loc: &Loc) -> bool;
+}
+
+/* IMPLEMENTATION SECTION */
 
 impl Loc {
   pub fn new(row: i64, col: i64) -> Self {
@@ -47,7 +55,6 @@ impl Loc {
   }
 }
 
-/* IMPLEMENTATION SECTION */
 
 impl LifeWorld {
 
