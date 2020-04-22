@@ -1,16 +1,15 @@
 extern crate piston_window;
-use std::time::{SystemTime,UNIX_EPOCH};
-use std::path::Path;
-
-use piston_window::*;
 
 mod automata;
 
+use std::time::{SystemTime,UNIX_EPOCH};
+use std::path::Path;
+use piston_window::*;
 use automata::{IWorld, LifeWorld, AntWorld};
 
+//global constants
 const BLACK: [f32;4] = [0.0, 0.0, 0.0, 1.0];
 const WHITE: [f32;4] = [1.0; 4];
-// const RED: [f32;4] =   [1.0, 0.0, 0.0, 1.0];
 const SQUARE_SIZE: f64 = 5.0;
 const WINDOW_SIZE: u32 = 1024;
 const GFX_CONTEXT_OFFSET: f64 = (WINDOW_SIZE / 2) as f64;
@@ -25,7 +24,7 @@ fn main() {
         .build()
         .unwrap();
 
-    //initialize variables
+    //control and configuration variables
     let mut previous_update = UNIX_EPOCH;
     let mut speed: u128 = MILLIS_PER_FRAME;
     let mut cell_size:f64 = SQUARE_SIZE;
@@ -36,16 +35,13 @@ fn main() {
     let mut gen_counter:i64 = 0;
     let mut paused:bool = false;
     let mut color_invert:bool = false;
-    let mut world:automata::LifeWorld; 
-    let mut antworld:automata::AntWorld;// = automata::World::new();
-    let mut is_blank:bool = true;
 
-    antworld = AntWorld::from_blank_state().unwrap();
+    let mut xworld:Box<dyn IWorld>;
 
     match args.len()
     {
         1=>{
-            world = LifeWorld::from_blank_state().unwrap();
+            xworld = Box::new(AntWorld::new());
         },
         3=>{
             let cmd = &args[1];
@@ -53,16 +49,15 @@ fn main() {
             if cmd=="-n"
             {
                 let configuration_path = String::from(arg);
-                world = LifeWorld::from_configuration(&std::fs::read_to_string(Path::new(&configuration_path)).unwrap(), '.', '*').unwrap();
-                is_blank = false;
+                xworld = Box::new(LifeWorld::from_configuration(&std::fs::read_to_string(Path::new(&configuration_path)).unwrap(), '.', '*').unwrap());
             }
             else
             {
-                world = LifeWorld::from_blank_state().unwrap();
+                xworld = Box::new(LifeWorld::new())
             }
         }
         _=>{
-            world = LifeWorld::from_blank_state().unwrap();
+            xworld = Box::new(AntWorld::new());
         }
     }
 
@@ -71,14 +66,7 @@ fn main() {
 
                 if !paused
                 {
-                    if is_blank
-                    {
-                        antworld.step();
-                    }
-                    else
-                    {
-                        world.step();
-                    }
+                    xworld.step();
                     gen_counter = gen_counter + 1;
                 }
                 // println!("Step took: {}ms", step_start.elapsed().map(|d| d.as_micros()).unwrap_or(0) as f32 / 1000.0);
@@ -168,25 +156,12 @@ fn main() {
 
                 // Translate by 1/2 the window size, to center 0,0 in the middle of the window
                 let context = context.trans(GFX_CONTEXT_OFFSET+cursor_x, GFX_CONTEXT_OFFSET+cursor_y);
-                if is_blank
-                {
-                    for loc in antworld.current_buffer().keys() {
-                        if antworld.get(loc) {
-                            rectangle(foreground, [loc.col as f64 * cell_size, loc.row as f64 * cell_size, cell_size, cell_size], context.transform, graphics);
-                        } else {
+                //iterate through cells
+                for loc in xworld.current_buffer().keys() {
+                    if xworld.get(loc) {
+                        rectangle(foreground, [loc.col as f64 * cell_size, loc.row as f64 * cell_size, cell_size, cell_size], context.transform, graphics);
+                    } else {
 
-                        }
-                    }
-
-                }
-                else
-                {
-                    for loc in world.current_buffer().keys() {
-                        if world.get(loc) {
-                            rectangle(foreground, [loc.col as f64 * cell_size, loc.row as f64 * cell_size, cell_size, cell_size], context.transform, graphics);
-                        } else {
-
-                        }
                     }
                 }
             });

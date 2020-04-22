@@ -29,8 +29,6 @@ pub struct AntWorld {
 
 //common trait to both types of automata
 pub trait IWorld {
-    fn new() -> Self;
-    //fn from_blank_state() ->Result<Self,String>;
     fn get(&self, loc: &Loc) -> bool;
     fn set(&mut self, loc: &Loc, alive: bool);
     fn current_buffer(&self) -> &HashMap<Loc,bool>;
@@ -63,13 +61,6 @@ impl Loc {
 }
 
 impl IWorld for LifeWorld {
-    fn new() -> LifeWorld {
-      Self {
-        buffer_1: HashMap::new(),
-        buffer_2: HashMap::new(),
-        using_buffer_1: true,
-      }
-    }
 
     fn get(&self, loc: &Loc) -> bool {
       return is_alive(self.current_buffer(), loc)
@@ -141,14 +132,6 @@ impl IWorld for LifeWorld {
 
 /* AntWorld Trait */
 impl IWorld for AntWorld {
-    fn new() -> AntWorld {
-      Self {
-        buffer_1: HashMap::new(),
-        machine: Loc::new(0,0),
-        angle: 90,
-      }
-    }
-
     fn get(&self, loc: &Loc) -> bool {
       return is_alive(&self.buffer_1, loc)
     }
@@ -197,10 +180,12 @@ impl IWorld for AntWorld {
 }
 
 impl LifeWorld {
-  pub fn from_blank_state()->Result<Self, String>
-  {
-    let world = Self::new();
-    return Ok(world);
+  pub fn new() -> LifeWorld {
+      Self {
+        buffer_1: HashMap::new(),
+        buffer_2: HashMap::new(),
+        using_buffer_1: true,
+      }
   }
 
   /**
@@ -258,10 +243,12 @@ impl LifeWorld {
 }
 
 impl AntWorld {
-    pub fn from_blank_state()->Result<Self, String>
-    {
-     let world = Self::new();
-     return Ok(world);
+    pub fn new() -> AntWorld {
+      Self {
+        buffer_1: HashMap::new(),
+        machine: Loc::new(0,0),
+        angle: 90,
+      }
     }
 }
 
