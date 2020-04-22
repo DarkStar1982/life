@@ -239,7 +239,6 @@ impl LifeWorld {
           return false
       }
   }
-
 }
 
 impl AntWorld {

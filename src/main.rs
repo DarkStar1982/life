@@ -15,6 +15,16 @@ const WINDOW_SIZE: u32 = 1024;
 const GFX_CONTEXT_OFFSET: f64 = (WINDOW_SIZE / 2) as f64;
 const MILLIS_PER_FRAME: u128 = 10;
 
+//config struct
+struct Config {
+    speed:u128,
+    cell_size:f64,
+    cursor_x:f64,
+    cursor_y:f64,
+    paused: bool,
+    color_invert:bool
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let opengl = OpenGL::V3_2;
@@ -24,19 +34,26 @@ fn main() {
         .build()
         .unwrap();
 
-    //control and configuration variables
-    let mut previous_update = UNIX_EPOCH;
-    let mut speed: u128 = MILLIS_PER_FRAME;
-    let mut cell_size:f64 = SQUARE_SIZE;
+    //world
+    let mut xworld:Box<dyn IWorld>;
+
+    //screen configs
+    let mut win_cfg = Config {
+        speed: MILLIS_PER_FRAME,
+        cell_size: SQUARE_SIZE,
+        cursor_x: 0.0,
+        cursor_y: 0.0,
+        paused: false,
+        color_invert: false
+    };
+
+    //screen colors
     let mut foreground: [f32;4] = WHITE;
     let mut background: [f32;4] = BLACK;
-    let mut cursor_x:f64 = 0.0;
-    let mut cursor_y:f64 = 0.0;
-    let mut gen_counter:i64 = 0;
-    let mut paused:bool = false;
-    let mut color_invert:bool = false;
 
-    let mut xworld:Box<dyn IWorld>;
+    //internal counters
+    let mut previous_update = UNIX_EPOCH;
+    let mut gen_counter:i64 = 0;
 
     match args.len()
     {
@@ -61,10 +78,11 @@ fn main() {
         }
     }
 
-    while let Some(e) = window.next() {
-        if (speed == 0) | (previous_update.elapsed().map(|d| d.as_millis()).unwrap_or(0) > speed) {
 
-                if !paused
+    while let Some(e) = window.next() {
+        if (win_cfg.speed == 0) | (previous_update.elapsed().map(|d| d.as_millis()).unwrap_or(0) > win_cfg.speed) {
+
+                if !win_cfg.paused
                 {
                     xworld.step();
                     gen_counter = gen_counter + 1;
@@ -77,66 +95,66 @@ fn main() {
                     Button::Keyboard(key) => {
                          match key {
                              Key::Down=>{
-                                 cursor_y = cursor_y - 20.0;
+                                 win_cfg.cursor_y = win_cfg.cursor_y - 20.0;
                              }
                              Key::Up=>{
-                                 cursor_y = cursor_y + 20.0;
+                                 win_cfg.cursor_y = win_cfg.cursor_y + 20.0;
                              }
                              Key::Left=>{
-                                 cursor_x = cursor_x + 20.0;
+                                 win_cfg.cursor_x = win_cfg.cursor_x + 20.0;
                              }
                              Key::Right=>{
-                                 cursor_x = cursor_x - 20.0;
+                                 win_cfg.cursor_x = win_cfg.cursor_x - 20.0;
                              }
                              Key::Z => {
-                                 cell_size = cell_size/2.0;
+                                 win_cfg.cell_size = win_cfg.cell_size/2.0;
                              }
                              Key::X => {
-                                 cell_size = cell_size*2.0;
+                                 win_cfg.cell_size = win_cfg.cell_size*2.0;
                              }
                              Key::C => {
-                                 if color_invert
+                                 if win_cfg.color_invert
                                  {
-                                     color_invert = false;
+                                     win_cfg.color_invert = false;
                                      foreground = WHITE;
                                      background = BLACK;
                                  }
                                  else {
-                                     color_invert = true;
+                                     win_cfg.color_invert = true;
                                      foreground = BLACK;
                                      background = WHITE;
                                  }
                              }
                              Key::F => {
-                                 if speed>2
+                                 if win_cfg.speed>2
                                  {
-                                    speed = speed/2;
+                                    win_cfg.speed = win_cfg.speed/2;
                                  }
                                  else
                                  {
-                                     speed = 0;
+                                     win_cfg.speed = 0;
                                  }
                              }
                              Key::S => {
-                                 if speed == 0
+                                 if win_cfg.speed == 0
                                  {
-                                     speed = 1;
+                                     win_cfg.speed = 1;
                                  }
                                  else
                                  {
-                                     speed = speed*2;
+                                     win_cfg.speed = win_cfg.speed*2;
                                  }
                              }
                              Key::I => {
                                  println!("Generation: {:}", gen_counter);
-                                 println!("Speed is {:} ms per frame", speed);
+                                 println!("Speed is {:} ms per frame", win_cfg.speed);
                              }
                              Key::P => {
-                                 paused = true;
+                                 win_cfg.paused = true;
                                  println!("Game paused");
                              }
                              Key::R => {
-                                 paused = false;
+                                 win_cfg.paused = false;
                                  println!("Resumed");
                              }
                              _=>{
@@ -159,7 +177,7 @@ fn main() {
                 //iterate through cells
                 for loc in xworld.current_buffer().keys() {
                     if xworld.get(loc) {
-                        rectangle(foreground, [loc.col as f64 * cell_size, loc.row as f64 * cell_size, cell_size, cell_size], context.transform, graphics);
+                        rectangle(foreground, [loc.col as f64 * win_cfg.cell_size, loc.row as f64 * win_cfg.cell_size, win_cfg.cell_size, win_cfg.cell_size], context.transform, graphics);
                     } else {
 
                     }
