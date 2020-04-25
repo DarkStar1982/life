@@ -1,4 +1,5 @@
 extern crate piston_window;
+extern crate clap;
 
 mod automata;
 
@@ -6,6 +7,8 @@ use std::time::{SystemTime,UNIX_EPOCH};
 use std::path::Path;
 use piston_window::*;
 use automata::{IWorld, LifeWorld, AntWorld};
+use clap::{Arg, App};
+
 
 //global constants
 const BLACK: [f32;4] = [0.0, 0.0, 0.0, 1.0];
@@ -26,9 +29,27 @@ struct Config {
 }
 
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
+    //command-line arguments
+    let matches = App::new("Cellular Automata Engine")
+                          .version("0.1")
+                          .author("Dennis")
+                          .about("Runs various cellular automata")
+                          .arg(Arg::with_name("input")
+                               .short("i")
+                               .long("input")
+                               .value_name("FILE")
+                               .help("Runs from a custom input file")
+                               .takes_value(true))
+                          .arg(Arg::with_name("mode")
+                               .short("m")
+                               .long("mode")
+                               .value_name("MODE")
+                               .help("selects  input file")
+                               .takes_value(true))
+                          .get_matches();
+
     let opengl = OpenGL::V3_2;
-    let mut window: PistonWindow = WindowSettings::new("Life", [WINDOW_SIZE; 2])
+    let mut window: PistonWindow = WindowSettings::new("EntropyLife", [WINDOW_SIZE; 2])
         .exit_on_esc(true)
         .graphics_api(opengl)
         .build()
@@ -55,29 +76,28 @@ fn main() {
     let mut previous_update = UNIX_EPOCH;
     let mut gen_counter:i64 = 0;
 
-    match args.len()
-    {
-        1=>{
-            xworld = Box::new(AntWorld::new());
-        },
-        3=>{
-            let cmd = &args[1];
-            let arg = &args[2];
-            if cmd=="-n"
+    //read command line parameters
+    let filepath = matches.value_of("input").unwrap_or("");
+    let mode = matches.value_of("mode").unwrap_or("");
+
+    match mode {
+        "l" | "life" => {
+            if filepath!=""
             {
-                let configuration_path = String::from(arg);
-                xworld = Box::new(LifeWorld::from_configuration(&std::fs::read_to_string(Path::new(&configuration_path)).unwrap(), '.', '*').unwrap());
+                xworld = Box::new(LifeWorld::from_configuration(&std::fs::read_to_string(Path::new(&filepath)).unwrap(), '.', '*').unwrap());
             }
-            else
-            {
+            else {
                 xworld = Box::new(LifeWorld::new())
             }
         }
-        _=>{
+        "a" | "ant" => {
             xworld = Box::new(AntWorld::new());
         }
+        _   => {
+            println!("No mode specified");
+            return;
+        }
     }
-
 
     while let Some(e) = window.next() {
         if (win_cfg.speed == 0) | (previous_update.elapsed().map(|d| d.as_millis()).unwrap_or(0) > win_cfg.speed) {
@@ -173,7 +193,7 @@ fn main() {
                 clear(background, graphics);
 
                 // Translate by 1/2 the window size, to center 0,0 in the middle of the window
-                let context = context.trans(GFX_CONTEXT_OFFSET+cursor_x, GFX_CONTEXT_OFFSET+cursor_y);
+                let context = context.trans(GFX_CONTEXT_OFFSET+win_cfg.cursor_x, GFX_CONTEXT_OFFSET+win_cfg.cursor_y);
                 //iterate through cells
                 for loc in xworld.current_buffer().keys() {
                     if xworld.get(loc) {

@@ -14,15 +14,17 @@ Assuming you have `cargo` installed, just execute `cargo run`
 
 To load any of Life example patterns do as following
 ```
-cargo run -- -n src/configurations/glider.txt
+cargo run -- m l -i src/configurations/glider.txt
 ```
 
 To run without `cargo`, using just build output
 ```
-...target/debug/entropylife -n ../../src/configurations/glider.txt
+...target/debug/entropylife -m l -i ../../src/configurations/glider.txt
 ```
 
-When run without input arguments it runs Langton's Ant algorithm
+When run with ""-m a" input arguments it runs Langton's Ant algorithm
+When run with ""-m l" input arguments it runs Conway's Game of Life algorithm
+
 
 ## Controls
 Following commands are supported:
