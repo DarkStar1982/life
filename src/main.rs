@@ -28,46 +28,56 @@ struct Config {
     color_invert:bool
 }
 
-fn process_rule_argument(rule_arg: String)->[[bool;9];2]
+fn dfa_rules(rule_str: String) -> Option<[[bool;9];2]>
 {
     let mut result_birth = [false, false, false, false, false, false, false, false, false];
     let mut result_lives = [false, false, false, false, false, false, false, false, false];
+    let mut state:i32 = 0;
 
-    if rule_arg==""
+    //empty rulestring
+    if rule_str==""
     {
-        //default Life rule - B3/S23
         result_birth[3] = true;
         result_lives[2] = true;
         result_lives[3] = true;
-        return [result_birth,result_lives];
+        return Some([result_birth, result_lives])
     }
-    else {
-        let rulesets:Vec<&str> = rule_arg.split('s').collect();
-        for rule_item in rulesets
-        {
-            if rule_item.chars().nth(0).unwrap()=='b'
-            {
-                for char in rule_item.chars()
-                {
-                    if char!='b' {
-                        let index:u32 = char.to_digit(10).unwrap();
-                        result_birth[index as usize]= true;
-                    }
-                }
-            }
-            else
-            {
-                for char in rule_item.chars()
-                {
-                    let index:u32 = char.to_digit(10).unwrap();
-                    result_lives[index as usize]= true;
-                }
-            }
-        }
-        return [result_birth,result_lives];
-    }
-}
 
+    //...otherwise parse rulestring
+    for char in rule_str.chars()
+    {
+        match char
+        {
+            'b'|'B'=> {
+                match state
+                {
+                    0 => { state = 1 }
+                    2 => { state = 1 }
+                    _ => { return None }
+                }
+            }
+            's'|'S'=> {
+                match state
+                {
+                    0 => { state = 2 }
+                    1 => { state = 2 }
+                    _ => { return None}
+                }
+            }
+            '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'=>{
+                let index:u32 = char.to_digit(10).unwrap();
+                match state
+                {
+                    1=> { result_birth[index as usize]= true }
+                    2=> { result_lives[index as usize]= true }
+                    _=> { return None }
+                }
+            }
+            _ => { return None }
+        }
+    }
+    return Some([result_birth, result_lives])
+}
 
 fn main() {
     //command-line arguments
@@ -128,62 +138,44 @@ fn main() {
     let mode = matches.value_of("mode").unwrap_or("");
     let rules = matches.value_of("rule").unwrap_or("");
 
-    //example rule b36s23
-    let processed_rules = process_rule_argument(rules.to_string());
+    let processed_rules = dfa_rules(rules.to_string()).unwrap();
 
     match mode {
         "l" | "life" => {
             if filepath!=""
-            {
-                xworld = Box::new(LifeWorld::from_configuration(&std::fs::read_to_string(Path::new(&filepath)).unwrap(), '.', '*',  processed_rules).unwrap());
-            }
-            else {
-                xworld = Box::new(LifeWorld::new())
-            }
+                { xworld = Box::new(LifeWorld::from_configuration(&std::fs::read_to_string(Path::new(&filepath)).unwrap(), '.', '*',  processed_rules).unwrap()) }
+            else
+                { xworld = Box::new(LifeWorld::new()) }
         }
-        "a" | "ant" => {
-            xworld = Box::new(AntWorld::new());
-        }
-        _   => {
-            println!("No mode specified");
-            return;
-        }
+        "a" | "ant" => { xworld = Box::new(AntWorld::new()) }
+        _ => { return }
     }
 
     while let Some(e) = window.next() {
         if (win_cfg.speed == 0) | (previous_update.elapsed().map(|d| d.as_millis()).unwrap_or(0) > win_cfg.speed) {
-
                 if !win_cfg.paused
                 {
                     xworld.step();
                     gen_counter = gen_counter + 1;
                 }
-                // println!("Step took: {}ms", step_start.elapsed().map(|d| d.as_micros()).unwrap_or(0) as f32 / 1000.0);
                 previous_update = SystemTime::now();
             }
             if let Some(button) = e.release_args() {
                 match button {
                     Button::Keyboard(key) => {
                          match key {
-                             Key::Down=>{
-                                 win_cfg.cursor_y = win_cfg.cursor_y - 20.0;
-                             }
-                             Key::Up=>{
-                                 win_cfg.cursor_y = win_cfg.cursor_y + 20.0;
-                             }
-                             Key::Left=>{
-                                 win_cfg.cursor_x = win_cfg.cursor_x + 20.0;
-                             }
-                             Key::Right=>{
-                                 win_cfg.cursor_x = win_cfg.cursor_x - 20.0;
-                             }
-                             Key::Z => {
-                                 win_cfg.cell_size = win_cfg.cell_size/2.0;
-                             }
-                             Key::X => {
-                                 win_cfg.cell_size = win_cfg.cell_size*2.0;
-                             }
-                             Key::C => {
+                             //scroll
+                             Key::Down  =>  { win_cfg.cursor_y = win_cfg.cursor_y - 20.0 }
+                             Key::Up    =>  { win_cfg.cursor_y = win_cfg.cursor_y + 20.0 }
+                             Key::Left  =>  { win_cfg.cursor_x = win_cfg.cursor_x + 20.0 }
+                             Key::Right =>  { win_cfg.cursor_x = win_cfg.cursor_x - 20.0 }
+
+                             //zoom
+                             Key::Z =>  { win_cfg.cell_size = win_cfg.cell_size/2.0 }
+                             Key::X =>  { win_cfg.cell_size = win_cfg.cell_size*2.0 }
+
+                             //color switch
+                             Key::C =>  {
                                  if win_cfg.color_invert
                                  {
                                      win_cfg.color_invert = false;
@@ -196,47 +188,41 @@ fn main() {
                                      background = WHITE;
                                  }
                              }
-                             Key::F => {
+
+                             //simulation speed controls
+                             Key::F =>  {
                                  if win_cfg.speed>2
-                                 {
-                                    win_cfg.speed = win_cfg.speed/2;
-                                 }
+                                    { win_cfg.speed = win_cfg.speed/2 }
                                  else
-                                 {
-                                     win_cfg.speed = 0;
-                                 }
+                                    { win_cfg.speed = 0 }
                              }
-                             Key::S => {
+                             Key::S =>  {
                                  if win_cfg.speed == 0
-                                 {
-                                     win_cfg.speed = 1;
-                                 }
+                                    { win_cfg.speed = 1 }
                                  else
-                                 {
-                                     win_cfg.speed = win_cfg.speed*2;
-                                 }
+                                    { win_cfg.speed = win_cfg.speed*2 }
                              }
-                             Key::I => {
-                                 println!("Generation: {:}", gen_counter);
-                                 println!("Speed is {:} ms per frame", win_cfg.speed);
-                             }
-                             Key::P => {
+
+                             // pause-resume actions
+                             Key::P =>  {
                                  win_cfg.paused = true;
                                  println!("Game paused");
                              }
-                             Key::R => {
+                             Key::R =>  {
                                  win_cfg.paused = false;
                                  println!("Resumed");
                              }
-                             _=>{
-                                 //ignore other input
-                                 //println!("Released keyboard key '{:?}'", key);
+
+                             // info dump
+                             Key::I =>  {
+                                 println!("Generation: {:}", gen_counter);
+                                 println!("Speed is {:} ms per frame", win_cfg.speed);
                              }
+
+                             _=> { /* ignore other key inputs */ }
                          }
                      }
-                     _=>{
-                         //ignore other input
-                     }
+                     _=> {/* ignore all other inputs */ }
                 }
             };
 
