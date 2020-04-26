@@ -25,6 +25,11 @@ To run without `cargo`, using just build output
 When run with ""-m a" input arguments it runs Langton's Ant algorithm
 When run with ""-m l" input arguments it runs Conway's Game of Life algorithm
 
+## Running with different rules for Life-like automata
+
+Specify -r b[0-9]*s[0-9] command-line key, examples:
+cargo run -- m l -i src/configurations/glider.txt -r b3s23
+cargo run -- m l -i src/configurations/agar.txt -r b36s23
 
 ## Controls
 Following commands are supported:
