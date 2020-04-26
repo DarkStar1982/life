@@ -18,6 +18,8 @@ pub struct LifeWorld {
   buffer_1: HashMap<Loc,bool>,
   buffer_2: HashMap<Loc,bool>,
   using_buffer_1: bool,
+  rules_newborn: [bool; 9],
+  rules_survive: [bool; 9]
 }
 
 //Langton's Ant automata
@@ -185,6 +187,8 @@ impl LifeWorld {
         buffer_1: HashMap::new(),
         buffer_2: HashMap::new(),
         using_buffer_1: true,
+        rules_newborn: NEWBORNS,
+        rules_survive: SURVIVES
       }
   }
 
@@ -193,7 +197,7 @@ impl LifeWorld {
    * periods and asterisks (rows separated by line breaks), where asterisks
    * are "alive" cells and periods are dead cells.
    */
-  pub fn from_configuration(data: &str, dead_char: char, alive_char: char) -> Result<Self,String> {
+  pub fn from_configuration(data: &str, dead_char: char, alive_char: char, rules:[[bool;9];2]) -> Result<Self,String> {
     let mut world = Self::new();
 
     let mut row = 0;
@@ -214,8 +218,14 @@ impl LifeWorld {
         return Err(format!("Invalid char '{}' at {}, {}", c, row, col));
       }
     }
-
+    world.set_rules(rules);
     return Ok(world);
+  }
+
+  pub fn set_rules(&mut self, rules:[[bool;9];2])
+  {
+      self.rules_newborn = rules[0];
+      self.rules_survive = rules[1];
   }
 
   fn next_buffer(&mut self) -> &mut HashMap<Loc,bool> {
@@ -227,11 +237,11 @@ impl LifeWorld {
   }
 
  fn new_status(&self, alive: bool, alive_neighbors: usize) -> bool {
-      if alive && SURVIVES[alive_neighbors]
+      if alive && self.rules_survive[alive_neighbors]
       {
           return true
       }
-      else if !alive && NEWBORNS[alive_neighbors] {
+      else if !alive && self.rules_newborn[alive_neighbors] {
           return true
       }
       else

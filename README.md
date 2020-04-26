@@ -34,3 +34,8 @@ Following commands are supported:
 * Run slower/faster: S/F
 * Dump info (generation count and speed): I
 * Invert colors: C
+
+## TODO
+* More command-line parameters (rules, entropy/energy config)
+* RLE file reading support
+* Edit and save support

@@ -28,6 +28,47 @@ struct Config {
     color_invert:bool
 }
 
+fn process_rule_argument(rule_arg: String)->[[bool;9];2]
+{
+    let mut result_birth = [false, false, false, false, false, false, false, false, false];
+    let mut result_lives = [false, false, false, false, false, false, false, false, false];
+
+    if rule_arg==""
+    {
+        //default Life rule - B3/S23
+        result_birth[3] = true;
+        result_lives[2] = true;
+        result_lives[3] = true;
+        return [result_birth,result_lives];
+    }
+    else {
+        let rulesets:Vec<&str> = rule_arg.split('s').collect();
+        for rule_item in rulesets
+        {
+            if rule_item.chars().nth(0).unwrap()=='b'
+            {
+                for char in rule_item.chars()
+                {
+                    if char!='b' {
+                        let index:u32 = char.to_digit(10).unwrap();
+                        result_birth[index as usize]= true;
+                    }
+                }
+            }
+            else
+            {
+                for char in rule_item.chars()
+                {
+                    let index:u32 = char.to_digit(10).unwrap();
+                    result_lives[index as usize]= true;
+                }
+            }
+        }
+        return [result_birth,result_lives];
+    }
+}
+
+
 fn main() {
     //command-line arguments
     let matches = App::new("Cellular Automata Engine")
@@ -44,7 +85,13 @@ fn main() {
                                .short("m")
                                .long("mode")
                                .value_name("MODE")
-                               .help("selects  input file")
+                               .help("selects input file")
+                               .takes_value(true))
+                          .arg(Arg::with_name("rule")
+                               .short("r")
+                               .long("rule")
+                               .value_name("RULE")
+                               .help("selects automata rule")
                                .takes_value(true))
                           .get_matches();
 
@@ -79,12 +126,16 @@ fn main() {
     //read command line parameters
     let filepath = matches.value_of("input").unwrap_or("");
     let mode = matches.value_of("mode").unwrap_or("");
+    let rules = matches.value_of("rule").unwrap_or("");
+
+    //example rule b36s23
+    let processed_rules = process_rule_argument(rules.to_string());
 
     match mode {
         "l" | "life" => {
             if filepath!=""
             {
-                xworld = Box::new(LifeWorld::from_configuration(&std::fs::read_to_string(Path::new(&filepath)).unwrap(), '.', '*').unwrap());
+                xworld = Box::new(LifeWorld::from_configuration(&std::fs::read_to_string(Path::new(&filepath)).unwrap(), '.', '*',  processed_rules).unwrap());
             }
             else {
                 xworld = Box::new(LifeWorld::new())
