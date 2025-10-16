@@ -222,6 +222,20 @@ impl LifeWorld {
     return Ok(world);
   }
 
+  //Life RLE Decoder
+  pub fn from_rle_file(data: &str) -> Result<Self,String>
+  {
+      let mut world = Self::new();
+      let mut state:i32 = 0;
+      let mut line_counter = 1;
+      for char in data.chars()
+      {
+      }
+
+      //world.set_rules(rules);
+      return Ok(world);
+  }
+
   pub fn set_rules(&mut self, rules:[[bool;9];2])
   {
       self.rules_newborn = rules[0];

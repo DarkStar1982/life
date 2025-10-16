@@ -7,7 +7,7 @@ use std::time::{SystemTime,UNIX_EPOCH};
 use std::path::Path;
 use piston_window::*;
 use automata::{IWorld, LifeWorld, AntWorld};
-use clap::{Arg, App};
+use clap::{Command, Arg};
 
 
 //global constants
@@ -79,31 +79,35 @@ fn dfa_rules(rule_str: String) -> Option<[[bool;9];2]>
     return Some([result_birth, result_lives])
 }
 
-fn main() {
+fn main() 
+{
+
     //command-line arguments
-    let matches = App::new("Cellular Automata Engine")
+    let matches = Command::new("Cellular Automata Engine")
                           .version("0.1")
                           .author("Dennis")
                           .about("Runs various cellular automata")
-                          .arg(Arg::with_name("input")
-                               .short("i")
+                          .arg(Arg::new("input")
+                               .short('i')
                                .long("input")
                                .value_name("FILE")
-                               .help("Runs from a custom input file")
-                               .takes_value(true))
-                          .arg(Arg::with_name("mode")
-                               .short("m")
+                               .help("Runs from a Life 1.05 input file"))
+                          .arg(Arg::new("mode")
+                               .short('m')
                                .long("mode")
                                .value_name("MODE")
-                               .help("selects input file")
-                               .takes_value(true))
-                          .arg(Arg::with_name("rule")
-                               .short("r")
+                               .help("selects input file"))
+                          .arg(Arg::new("rule")
+                               .short('r')
                                .long("rule")
                                .value_name("RULE")
-                               .help("selects automata rule")
-                               .takes_value(true))
-                          .get_matches();
+                               .help("selects automata rule"))
+                          .arg(Arg::new("rle_file")
+                                .short('e')
+                                .long("rle")
+                                .value_name("RLE_FILE")
+                                .help("Runs from a Life RLE input file"))
+                          .get_matches(); 
 
     let opengl = OpenGL::V3_2;
     let mut window: PistonWindow = WindowSettings::new("EntropyLife", [WINDOW_SIZE; 2])
@@ -133,17 +137,33 @@ fn main() {
     let mut previous_update = UNIX_EPOCH;
     let mut gen_counter:i64 = 0;
 
+    //input type
+    let mut from_rle:bool = false;
+
     //read command line parameters
-    let filepath = matches.value_of("input").unwrap_or("");
-    let mode = matches.value_of("mode").unwrap_or("");
-    let rules = matches.value_of("rule").unwrap_or("");
-
+    let binding = "".to_string();
+    let binding2 = "".to_string();
+    let binding3 = "".to_string();
+    let mut filepath = matches.get_one::<String>("input").unwrap_or(&binding);
+    let mode = matches.get_one::<String>("mode").unwrap_or(&binding2);
+    let rules = matches.get_one::<String>("rule").unwrap_or(&binding3);
     let processed_rules = dfa_rules(rules.to_string()).unwrap();
+    if filepath == ""
+    {
+        filepath = matches.get_one::<String>("rle_file").unwrap_or(&binding);
+        from_rle = true;
+    };
 
-    match mode {
+
+    match mode.as_str() {
         "l" | "life" => {
             if filepath!=""
-                { xworld = Box::new(LifeWorld::from_configuration(&std::fs::read_to_string(Path::new(&filepath)).unwrap(), '.', '*',  processed_rules).unwrap()) }
+                {
+                    if from_rle
+                        { xworld = Box::new(LifeWorld::from_rle_file(&std::fs::read_to_string(Path::new(&filepath)).unwrap()).unwrap()) }
+                    else
+                        { xworld = Box::new(LifeWorld::from_configuration(&std::fs::read_to_string(Path::new(&filepath)).unwrap(), '.', '*',  processed_rules).unwrap()) }
+                }
             else
                 { xworld = Box::new(LifeWorld::new()) }
         }
