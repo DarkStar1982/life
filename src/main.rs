@@ -261,7 +261,7 @@ fn main()
                                  println!("Generation: {:}", gen_counter);
                                  println!("Speed is {:} ms per frame", win_cfg.speed);
                                  println!("Warp speed is {:}", ww);
-                                 println!("Cell population is {:}", xworld.pop_count())
+                                 println!("Cell population is {:}", xworld.current_buffer().len())
                              }
 
                              _=> { /* ignore other key inputs */ }

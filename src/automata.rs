@@ -5,7 +5,7 @@ use rand::prelude::*;
 static NEWBORNS: [bool; 9] = [false, false, false, true, false, false, true, false, false];
 static SURVIVES: [bool; 9] = [false, false, true,  true, false, false, false, false, false];
 
-const ENTROPY:f64 = 0.001;
+const ENTROPY:f64 = 0.0005;
 const ENERGY:f64 = 0.5;
 
 /* DECLARATIONS SECTION */
@@ -111,7 +111,8 @@ impl IWorld for LifeWorld {
     fn step(&mut self)
     {
       let keys: Vec<Loc> = self.current_buffer().keys().map(|&loc| loc).collect();
-      let range = -4..4;
+      let range = -50..50;
+      let range2 = -1..0;
       for loc in keys.iter() {
         let alive: bool = self.get(&loc);
         let neighbors: [Loc;8] = loc.neighbors();
@@ -137,12 +138,12 @@ impl IWorld for LifeWorld {
         let y: f64 = rand::random();
         if y < ENERGY
         {
-          if range.contains(&loc.col) & range.contains(&loc.row)
+          if range2.contains(&loc.col) & range.contains(&loc.row)
           {
             self.set(&loc,true);
           }
         }
-
+        
       }
 
       // Toggle buffers
@@ -284,6 +285,7 @@ impl LifeWorld {
           return false
       }
   }
+
 }
 
 impl AntWorld {
