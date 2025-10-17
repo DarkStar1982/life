@@ -8,6 +8,7 @@ edition = "2018"
 piston_window = "0.132.0"
 clap = "4.5.9"
 crossbeam = "0.8.4"
+rand = "0.9.2"
 
 [profile.dev]
 opt-level = 0

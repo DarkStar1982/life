@@ -139,6 +139,7 @@ fn main()
 
     //input type
     let mut from_rle:bool = false;
+    let mut ww = 10;
 
     //read command line parameters
     let binding = "".to_string();
@@ -175,8 +176,15 @@ fn main()
         if (win_cfg.speed == 0) | (previous_update.elapsed().map(|d| d.as_millis()).unwrap_or(0) > win_cfg.speed) {
                 if !win_cfg.paused
                 {
-                    xworld.step();
-                    gen_counter = gen_counter + 1;
+                    if win_cfg.speed == 0
+                    {
+                        xworld.step();
+                        gen_counter = gen_counter + 1;
+                    }
+                    else {
+                        xworld.step();
+                        gen_counter = gen_counter + 1;
+                    }
                 }
                 previous_update = SystemTime::now();
             }
@@ -222,7 +230,22 @@ fn main()
                                  else
                                     { win_cfg.speed = win_cfg.speed*2 }
                              }
-
+                             // Warp fast forward
+                             Key::W => {
+                                for i in 0..ww
+                                {
+                                    xworld.step();
+                                }
+                                gen_counter = gen_counter + ww;
+                             }
+                             // Set Warp 10x faster
+                             Key::V => {
+                                if ww<10000 {ww = ww*10;}
+                             }
+                            // Set Warp 10x slower
+                             Key::U => {
+                                if ww>10 {ww = ww/10;}
+                             }
                              // pause-resume actions
                              Key::P =>  {
                                  win_cfg.paused = true;
@@ -237,6 +260,8 @@ fn main()
                              Key::I =>  {
                                  println!("Generation: {:}", gen_counter);
                                  println!("Speed is {:} ms per frame", win_cfg.speed);
+                                 println!("Warp speed is {:}", ww);
+                                 println!("Cell population is {:}", xworld.pop_count())
                              }
 
                              _=> { /* ignore other key inputs */ }

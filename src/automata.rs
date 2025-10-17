@@ -1,8 +1,12 @@
 use std::collections::hash_map::{HashMap};
+use rand::prelude::*;
 
 /* RULES SECTION - SHOULD BE MADE RECONFIGURABLE*/
-static NEWBORNS: [bool; 9] = [false, false, false, true, false, false, false, false, false];
+static NEWBORNS: [bool; 9] = [false, false, false, true, false, false, true, false, false];
 static SURVIVES: [bool; 9] = [false, false, true,  true, false, false, false, false, false];
+
+const ENTROPY:f64 = 0.001;
+const ENERGY:f64 = 0.5;
 
 /* DECLARATIONS SECTION */
 
@@ -107,7 +111,7 @@ impl IWorld for LifeWorld {
     fn step(&mut self)
     {
       let keys: Vec<Loc> = self.current_buffer().keys().map(|&loc| loc).collect();
-
+      let range = -4..4;
       for loc in keys.iter() {
         let alive: bool = self.get(&loc);
         let neighbors: [Loc;8] = loc.neighbors();
@@ -122,6 +126,23 @@ impl IWorld for LifeWorld {
         if alive_neighbors > 0 {
           self.set(&loc, self.new_status(alive, alive_neighbors));
         }
+
+        //apply "entropy" - at any time any live cell can randomly die, with probability
+        let x: f64 = rand::random();
+        if x < ENTROPY
+        {
+          self.set(&loc, false);
+        }
+
+        let y: f64 = rand::random();
+        if y < ENERGY
+        {
+          if range.contains(&loc.col) & range.contains(&loc.row)
+          {
+            self.set(&loc,true);
+          }
+        }
+
       }
 
       // Toggle buffers
